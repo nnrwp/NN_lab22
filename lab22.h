@@ -40,6 +40,17 @@ class Unit{
 		void equip(Equipment *);  
 };
 
+////class Equipment////
+Equipment::Equipment(int h, int a, int d){
+	hpmax = h; atk = a; def = d;
+}
+
+vector<int> Equipment::getStat(){
+	vector<int> t = {hpmax, atk, def};
+	return t;
+}
+
+////class Unit////
 Unit::Unit(string t,string n){ 
 	type = t;
 	name = n;
@@ -54,6 +65,7 @@ Unit::Unit(string t,string n){
 	}
 	hp = hpmax;	
 	guard_on = false;
+	dodge_on = false; //เมื่อตัวละครถูกสร้างขึ้น สถานะของการหลบหลีกจะต้องเริ่มต้นเป็น false เสมอ 
 	equipment = NULL;
 }
 
@@ -74,6 +86,7 @@ void Unit::showStatus(){
 
 void Unit::newTurn(){
 	guard_on = false; 
+	dodge_on = false; //สถานะของการหลบหลีกจะต้องถูก Reset เป็น false ทุกครั้งที่เริ่ม Turn ใหม่เสมอ
 }
 
 int Unit::beAttacked(int oppatk){
@@ -81,7 +94,12 @@ int Unit::beAttacked(int oppatk){
 	if(oppatk > def){
 		dmg = oppatk-def;	
 		if(guard_on) dmg = dmg/3;
-	}	
+		if(dodge_on){
+			int p = rand()%2;
+			if(p == 0) dmg = 0;
+			else dmg *= 2;
+		} 
+	}
 	hp -= dmg;
 	if(hp <= 0){hp = 0;}
 	
@@ -90,6 +108,11 @@ int Unit::beAttacked(int oppatk){
 
 int Unit::attack(Unit &opp){
 	return opp.beAttacked(atk);
+}
+
+//ultimateAttack()
+int Unit::ultimateAttack(Unit &opp){
+	return opp.beAttacked(2*atk);
 }
 
 int Unit::heal(){
@@ -103,9 +126,32 @@ void Unit::guard(){
 	guard_on = true;
 }	
 
+//dodge()
+void Unit::dodge(){
+	dodge_on = true;
+}
+
 bool Unit::isDead(){
 	if(hp <= 0) return true;
 	else return false;
+}
+
+//equip()
+void Unit::equip(Equipment *eq){
+	if(equipment != 0){
+		vector<int> t1 = equipment->getStat();
+		hpmax -= t1[0];
+		atk -= t1[1];
+		def -= t1[2];
+	}
+	vector<int> t2 = eq->getStat();
+	equipment = eq;
+	hpmax += t2[0];
+	atk += t2[1];
+	def += t2[2];
+	if(hp > hpmax){
+		hp = hpmax;
+	}
 }
 
 void drawScene(char p_action,int p,char m_action,int m){
